@@ -1,0 +1,53 @@
+name: Add MNIST dataset
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/add-mnist-dataset.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  add-mnist-dataset:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Download MNIST dataset
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/mnist "$GITHUB_WORKSPACE/data"
+          cd /tmp/mnist
+
+          curl -L --fail --retry 3 -o train-images-idx3-ubyte.gz \
+            https://storage.googleapis.com/cvdf-datasets/mnist/train-images-idx3-ubyte.gz
+          curl -L --fail --retry 3 -o train-labels-idx1-ubyte.gz \
+            https://storage.googleapis.com/cvdf-datasets/mnist/train-labels-idx1-ubyte.gz
+          curl -L --fail --retry 3 -o t10k-images-idx3-ubyte.gz \
+            https://storage.googleapis.com/cvdf-datasets/mnist/t10k-images-idx3-ubyte.gz
+          curl -L --fail --retry 3 -o t10k-labels-idx1-ubyte.gz \
+            https://storage.googleapis.com/cvdf-datasets/mnist/t10k-labels-idx1-ubyte.gz
+
+          gunzip -t *.gz
+          zip -9 -j "$GITHUB_WORKSPACE/data/MNIST_Dataset.zip" *.gz
+
+      - name: Commit dataset to repository
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/MNIST_Dataset.zip
+
+          if git diff --cached --quiet; then
+            echo "MNIST dataset is already present."
+          else
+            git commit -m "Add MNIST dataset"
+            git push
+          fi
