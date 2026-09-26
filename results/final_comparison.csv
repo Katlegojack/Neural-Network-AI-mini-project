@@ -1,0 +1,4 @@
+Method,Final_Average_Accuracy,Average_Forgetting
+Naive Sequential,0.197075,0.994055
+EWC,0.197680,0.995258
+Experience Replay,0.902456,0.106192
