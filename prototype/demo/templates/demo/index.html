@@ -55,7 +55,7 @@
             </form>
 
             <div class="samples">
-                <p class="label">Or test a real MNIST sample</p>
+                <p class="label">Or test a fixed, unseen MNIST test sample</p>
                 <div class="digit-grid">
                     {% for digit in "0123456789" %}
                     <button type="button" class="digit-button" onclick="useSample('{{ digit }}')">{{ digit }}</button>
@@ -86,6 +86,7 @@
                 <h3>{{ result.model_name }}</h3>
                 <div class="prediction">{{ result.prediction }}</div>
                 <p class="confidence">{{ result.confidence|floatformat:2 }}% confidence</p>
+                <p class="confidence-note">Confidence is the model's certainty, not a guarantee that it is correct.</p>
 
                 <div class="confidence-track">
                     <div class="confidence-fill" style="width: {{ result.confidence }}%"></div>
