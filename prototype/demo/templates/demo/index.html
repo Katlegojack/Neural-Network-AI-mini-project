@@ -1,0 +1,159 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Continual Learning MNIST Demo</title>
+    <link rel="stylesheet" href="{% static 'demo/style.css' %}">
+</head>
+<body>
+<main class="shell">
+    <header>
+        <p class="eyebrow">NCOS734 Continual Learning Prototype</p>
+        <h1>Can the model still remember the digit?</h1>
+        <p class="intro">
+            Test the same handwritten digit with Naive Sequential, EWC and Experience Replay.
+            Each model returns a predicted digit and a confidence score.
+        </p>
+    </header>
+
+    {% if missing_models %}
+    <section class="notice">
+        <strong>Models are not prepared yet.</strong>
+        <p>Run <code>python manage.py prepare_models</code> once, then refresh this page.</p>
+    </section>
+    {% endif %}
+
+    {% if error %}
+    <section class="error">{{ error }}</section>
+    {% endif %}
+
+    <section class="panel">
+        <div>
+            <h2>1. Choose an input</h2>
+            <form method="post" enctype="multipart/form-data" id="predict-form">
+                {% csrf_token %}
+                <input type="hidden" name="source" id="source" value="upload">
+                <input type="hidden" name="sample_digit" id="sample-digit">
+
+                <label class="label">Upload a handwritten digit image</label>
+                <input type="file" name="digit_image" id="digit-image" accept="image/*">
+
+                <label class="label">True digit (optional for uploads)</label>
+                <input type="number" name="true_digit" min="0" max="9" placeholder="Example: 7">
+
+                <label class="label">Model</label>
+                <select name="model">
+                    <option value="all">Compare all models</option>
+                    {% for key, label in model_labels.items %}
+                    <option value="{{ key }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+
+                <button class="primary" type="submit" onclick="useUpload()">Predict uploaded image</button>
+            </form>
+
+            <div class="samples">
+                <p class="label">Or test a real MNIST sample</p>
+                <div class="digit-grid">
+                    {% for digit in "0123456789" %}
+                    <button type="button" class="digit-button" onclick="useSample('{{ digit }}')">{{ digit }}</button>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="preview-card">
+            <h2>Input image</h2>
+            {% if input_image %}
+                <img src="{{ input_image }}" alt="MNIST digit input" class="digit-preview">
+                {% if true_digit != None %}
+                <p>True digit: <strong>{{ true_digit }}</strong></p>
+                {% endif %}
+            {% else %}
+                <div class="empty-preview">Your digit will appear here.</div>
+            {% endif %}
+        </div>
+    </section>
+
+    {% if predictions %}
+    <section>
+        <h2>2. Model predictions</h2>
+        <div class="result-grid">
+            {% for result in predictions %}
+            <article class="result-card">
+                <h3>{{ result.model_name }}</h3>
+                <div class="prediction">{{ result.prediction }}</div>
+                <p class="confidence">{{ result.confidence|floatformat:2 }}% confidence</p>
+
+                <div class="confidence-track">
+                    <div class="confidence-fill" style="width: {{ result.confidence }}%"></div>
+                </div>
+
+                {% if true_digit != None %}
+                    {% if result.correct %}
+                    <p class="correct">✓ Correct</p>
+                    {% else %}
+                    <p class="incorrect">✕ Incorrect</p>
+                    {% endif %}
+                {% endif %}
+
+                <details>
+                    <summary>Top 3 predictions</summary>
+                    <ol>
+                        {% for item in result.top3 %}
+                        <li>Digit {{ item.digit }} — {{ item.confidence|floatformat:2 }}%</li>
+                        {% endfor %}
+                    </ol>
+                </details>
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    {% if project_results %}
+    <section class="experiment">
+        <h2>3. Overall experiment results</h2>
+        <p>
+            These are the final measurements from the sequential-learning experiment.
+            Higher final accuracy is better; lower forgetting is better.
+        </p>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Method</th>
+                        <th>Final average accuracy</th>
+                        <th>Average forgetting</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for row in project_results %}
+                    <tr>
+                        <td>{{ row.method }}</td>
+                        <td>{{ row.accuracy|floatformat:2 }}%</td>
+                        <td>{{ row.forgetting|floatformat:2 }} pp</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    {% endif %}
+</main>
+
+<script>
+function useUpload() {
+    document.getElementById("source").value = "upload";
+}
+
+function useSample(digit) {
+    document.getElementById("source").value = "sample";
+    document.getElementById("sample-digit").value = digit;
+    document.getElementById("predict-form").submit();
+}
+</script>
+</body>
+</html>
