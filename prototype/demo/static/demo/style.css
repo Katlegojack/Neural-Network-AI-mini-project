@@ -209,3 +209,9 @@ code {
         grid-template-columns: 1fr;
     }
 }
+
+.confidence-note {
+    color: #747a86;
+    font-size: 13px;
+    line-height: 1.45;
+}
