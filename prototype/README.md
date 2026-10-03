@@ -46,3 +46,20 @@ After that, normal prototype use only performs inference; it does not retrain th
 ## Recommended demo
 
 For a reliable presentation, click the built-in MNIST sample digits first. Then upload your own handwritten image to demonstrate how the system handles a new image.
+
+
+## Render deployment
+
+The Render service builds the three model checkpoints automatically during deployment, collects static files, and then starts Django with Gunicorn.
+
+Build command:
+
+```bash
+pip install -r requirements.txt && cd prototype && python manage.py prepare_models && python manage.py collectstatic --noinput
+```
+
+Start command:
+
+```bash
+cd prototype && gunicorn continual_demo.wsgi:application --bind 0.0.0.0:$PORT --workers 1 --timeout 120
+```
