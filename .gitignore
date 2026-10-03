@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+prototype/db.sqlite3
+models/*.pt
